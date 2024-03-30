@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Computer Graphics - Assignment 3</title>
+
+    <link href="resources/bootstrap.min.css" rel="stylesheet">
+    <link href="resources/custom2016.css" rel="stylesheet">
+    
+    <script src="glUtil.js"></script>
+    <script src="uiUtil.js"></script>
+    <script src="vector.js"></script>
+    <script src="matrix.js"></script>
+    <script src="mesh.js"></script>
+    <script src="geometry.js"></script>
+    <script src="teapot.js"></script>
+    <script src="task1.js"></script>
+    <script src="task2.js"></script>
+    <script src="task3.js"></script>
+    
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body onload="setupAssignment();">
+    <div class="container headerBar">
+        <h1>Programming Assignment 3 - Max Lan</h1>
+    </div>
+    <div class="container contentWrapper">
+        <div class="pageContent">
+            <!-- ================================================================= -->
+
+            <h2>Task 1: Bezier Patches</h2>
+
+            <p>I implemented a function to tessellate a cubic Bezier patch, using Bezier curve evaluations for both vertical and horizontal interpolations at each subdivision step. </p>
+            
+            <div class="canvas-container">
+                <div class="button-group-container"><div id="patch-selector"></div></div>
+                <canvas id="task-1" width="820" height="461"></canvas>
+                <div class="slider-container"><div id="bezier-subd"></div></div>
+            </div>
+
+            <!-- ================================================================= -->
+
+            <h2>Task 2: Catmull-Clark Subdivision</h2>
+            
+            <p>I implemented the Catmull-Clark subdivision algorithm to refine mesh geometry, involving linear subdivision, averaging vertex positions, 
+                and correcting positions to ensure a smooth, subdivided mesh. For task 4, I tried to draw an icosahedron.</p>
+            
+            <div class="canvas-container">
+                <div class="button-group-container"><div id="model-selector"></div></div>
+                <canvas id="task-2" width="820" height="461"></canvas>
+                <div class="slider-container"><div id="catmull-clark-subd"></div></div>
+            </div>
+
+            <!-- ================================================================= -->
+
+            <h2>Task 3: B-Spline Patches</h2>
+            
+            <p>I developed a function to tessellate a b-spline patch, calculating vertices using a cubic spline formula across U and V directions, 
+                and then forming quadrilateral faces based on these vertices. The result is much smoother compared to the method using bezier patches. </p>
+            
+            <div class="canvas-container">
+                <div class="button-group-container"><div id="patch-selector"></div></div>
+                <canvas id="task-3" width="820" height="461"></canvas>
+                <div class="slider-container"><div id="bspline-subd"></div></div>
+            </div>
+
+            <!-- ================================================================= -->
+        </div>
+    </div>
+    <script>
+        function setupAssignment() {
+            var task1 = setupTask("task-1", Task1);
+            var task2 = setupTask("task-2", Task2);
+            var task3 = setupTask("task-3", Task3);
+
+            new Slider("bezier-subd", 1, 10, 1, true, function(subd) {
+                this.setLabel("Tesselation level: " + subd);
+                task1.setSubdivisionLevel(subd);
+            });
+            new Slider("catmull-clark-subd", 1, 5, 1, true, function(subd) {
+                this.setLabel("Subdivision level: " + subd);
+                task2.setSubdivisionLevel(subd);
+            });
+            new Slider("bspline-subd", 1, 10, 1, true, function(subd) {
+                this.setLabel("Tesselation level: " + subd);
+                task3.setSubdivisionLevel(subd);
+            });
+
+            var patches = ["Square Patch", "Teapot"];
+            new ButtonGroup("patch-selector", patches, function(idx) {
+                task1.selectModel(idx);
+            });
+            var models = ["Cube", "Torus", "Ellipsoid", "Icosahedron", "Octahedron", "Extra Credit"];
+            new ButtonGroup("model-selector", models, function(idx) {
+                task2.selectModel(idx);
+            });
+            new ButtonGroup("patch-selector", patches, function(idx) {
+                task3.selectModel(idx);
+            });
+        }
+    </script>
+</body>
+</html>

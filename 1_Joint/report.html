@@ -1,0 +1,112 @@
+<!DOCTYPE html
+    PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Computer Graphics - Assignment 1</title>
+
+    <link href="resources/bootstrap.min.css" rel="stylesheet">
+    <link href="resources/custom2016.css" rel="stylesheet">
+
+    <script src="glUtil.js"></script>
+    <script src="uiUtil.js"></script>
+    <script src="matrix.js"></script>
+    <script src="cube.js"></script>
+    <script src="sphere.js"></script>
+    <script src="task1.js"></script>
+    <script src="task2.js"></script>
+    <script src="task3.js"></script>
+    <script src="task4.js"></script>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body onload="setupAssignment();">
+    <div class="container headerBar">
+        <h1>Programming Assignment 1</h1>
+    </div>
+    <div class="container contentWrapper">
+        <div class="pageContent">
+            <!-- ================================================================= -->
+
+            <h2>Task 1</h2>
+
+            <div class="canvas-container">
+                <canvas id="task-1" width="820" height="461"></canvas>
+            </div>
+
+            <!-- ================================================================= -->
+
+            <h2>Task 2</h2>
+
+            <div class="canvas-container">
+                <canvas id="task-2" width="820" height="461"></canvas>
+            </div>
+
+            <!-- ================================================================= -->
+
+            <h2>Task 3</h2>
+
+            <div class="canvas-container">
+                <canvas id="task-3" width="820" height="461"></canvas>
+            </div>
+
+            <!-- ================================================================= -->
+
+            <h2>Task 4</h2>
+
+            <div class="canvas-container">
+                <canvas id="task-4" width="820" height="461"></canvas>
+                <div class="slider-container">
+                    <div id="hip-rotation"></div>
+                </div>
+                <div class="slider-container">
+                    <div id="left-hip-angle"></div>
+                </div>
+                <div class="slider-container">
+                    <div id="left-knee-angle"></div>
+                </div>
+                <div class="slider-container">
+                    <div id="left-ankle-angle"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        function setupAssignment() {
+            setupTask("task-1", Task1, false);
+            setupTask("task-2", Task2, false);
+            setupTask("task-3", Task3, false);
+
+            var task4 = setupTask("task-4", Task4, false);
+
+            new Slider("hip-rotation", -90, 90, 0, true, function (angle) {
+                this.setLabel("Hip rotation: " + angle + " deg");
+                task4.setJointAngle(0, angle);
+            });
+            new Slider("left-hip-angle", -160, 20, 0, true, function (angle) {
+                this.setLabel("Hip angle: " + angle + " deg");
+                task4.setJointAngle(1, angle);
+            });
+            new Slider("left-knee-angle", 0, 160, 0, true, function (angle) {
+                this.setLabel("Knee angle: " + angle + " deg");
+                task4.setJointAngle(2, angle);
+            });
+            new Slider("left-ankle-angle", -30, 90, 0, true, function (angle) {
+                this.setLabel("Ankle angle: " + angle + " deg");
+                task4.setJointAngle(3, angle);
+            });
+        }
+    </script>
+</body>
+
+</html>
