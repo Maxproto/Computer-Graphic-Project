@@ -1,0 +1,1075 @@
+<!DOCTYPE html
+    PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Computer Graphics - Assignment 5</title>
+
+    <link href="resources/bootstrap.min.css" rel="stylesheet">
+    <link href="resources/custom2016.css" rel="stylesheet">
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <link rel="stylesheet" href="resources/github-dark-dimmed.css">
+    <script src="resources/highlight.min.js"></script>
+    <script src="resources/glsl.min.js"></script>
+    <script>
+        hljs.configure({ cssSelector: 'code' });
+        hljs.highlightAll();
+    </script>
+    <!-- <link href="resources/prism.css" rel="stylesheet" /> -->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body class="language-plaintext">
+    <div class="container headerBar">
+        <h1>Programming Assignment 5 - Name Here</h1>
+    </div>
+    <div class="container contentWrapper">
+
+        <!-- ================================================================= -->
+
+        <h2>Overview</h2>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <p>For the last two assignments in this class, you will be using the Shadertoy VS Code extension to
+                    write both a
+                    ray tracer and a sphere tracer. This will all be done using GLSL and will run on the GPU directly
+                    from your
+                    computer.</p>
+                <p>In this assignment, you will implement two different rendering techniques, ray marching and sphere
+                    tracing as
+                    well as a series of common signed distance functions and their operations.</p>
+                <p>Here are a few good references you may find useful when working with GLSL:</p>
+                <p><a
+                        href="https://www.khronos.org/assets/uploads/developers/presentations/opengles32-quick-reference-card.pdf">Quick
+                        reference card (starts on Slide 6)</a></p>
+                <p><a href="https://www.khronos.org/opengles/sdk/docs/manglsl/docbook4/">Official documentation</a></p>
+                <p>This assignment is split into 5 different tasks.</p>
+
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 0.1: Get the basecode running (0 points)</h3>
+
+                <p>Open the <code>assignment5-basecode</code> folder in VS Code and look at the files. Each task has its
+                    own main file, denoted <code>main_taskX.glsl</code>. The main file is where you will be viewing the
+                    shader, and
+                    contains the code for rendering, shading, and writing to <code>gl_FragColor</code>. If you are
+                    already familiar
+                    with coding in the <a href="https://www.shadertoy.com/" target="_blank" rel="noopener">Shadertoy
+                        website</a>, this main file is analogous to the Image tab. Most of the
+                    code you will write will be in the <code>sdf.glsl</code> and <code>ray.glsl</code> files.
+                </p>
+
+                <p>Navigate to <code>main_task0.glsl</code>. To view the shader, right click anywhere in the file and
+                    select "Show Static GLSL Preview". A non-static preview dynamically switches between displaying the
+                    output of whichever file was most recently edited/saved, while a static preview only displays the
+                    output of the file it was instantiated by. Both previews live reload upon saving a file. We
+                    recommend using the static preview (see Figure 1) to make the workflow smoother, since the sdf, ray,
+                    and common
+                    files do not output anything visible.</p>
+
+                <p>Your shader should look like Figure 2.</p>
+
+                <p>Play around with the shader preview. You can resize the window by dragging it, pause the shader with
+                    the pause/play button, take screenshots with the camera button in the top right corner, or view
+                    different metadata by clicking on the box in the top left. The shader will naturally increment the
+                    time and render your shader as a video. Behind the scenes Shadertoy is only rendering one quad which
+                    creates the canvas you see as the output of your shader. The shaders which you will be writing are
+                    simply fragment shaders which decide what color to render given a certain point on the quad. You may
+                    think of this as the GPU is simply running your shader once per pixel in parallel for all pixels!
+                </p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="figures/showstaticpreview.png"><img src="figures/showstaticpreview.png" alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 1</p>
+                    </div>
+                </div>
+                <div class="thumbnail">
+                    <a href="figures/baseshader.png"><img src="figures/baseshader.png" alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 2</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+
+                <p>At the top of each file is where other files are included, such as other code and textures, by using
+                    the C like syntax #include. These included files, however, cannot define their own
+                    <code>void main()</code>
+                    function. The top is also where we define various macros that allow for switching scenes and other
+                    settings. For example, the top of <code>main_task1.glsl</code> looks like Figure 3.
+                </p>
+                <p>This VS Code extension is designed to mimic the <a class="inline_disabled"
+                        href="https://www.shadertoy.com/" target="_blank" rel="noopener">Shadertoy website</a>,
+                    therefore it contains the same shader inputs (see Figure 4).
+
+                <p>Of these you will only be using iTime, iResolution, and iChannel for this assignment.</p>
+
+                <div class="alert alert-info" role="alert"><strong>Note:</strong> For the submission, you will create a
+                    portable GLSL preview for each task (see Figure 5). In
+                    each main task file, right click and select "Create Portable GLSL Preview". This will generate
+                    an HTML version of your shader. At the end of the assignment, make a zip folder of all of your
+                    GLSL files for upload, and also upload your HTML files separately.
+                </div>
+
+                <h3>Task 0.2: A gentle introduction (0 pts.)</h3>
+                <p>In the x-hours, we took you through the steps to go from the base code in task 0.1 to drawing a
+                    simple sphere. To get used to writing code in Shadertoy, please replicate the code from the x-hours
+                    by following along with the recorded video. If you followed along live, feel free to skip to task 1!
+                </p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="figures/header.png"><img src="figures/header.png" alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 3</p>
+                    </div>
+                </div>
+                <div class="thumbnail">
+                    <a href="figures/shadertoy_inputs.png"><img src="figures/shadertoy_inputs.png" alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 4</p>
+                    </div>
+                </div>
+                <div class="thumbnail">
+                    <a href="figures/portablepreview.png"><img src="figures/portablepreview.png" alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 5</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+
+        <h2>Task 1: Signed Distance Fields and their operations (2 pts.)</h2>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <p>For your first task, you will be deriving and implementing a few different signed distance functions
+                    (SDFs) and also implementing some commonly used SDF operations. Once you complete this task, you
+                    will have derived the exact signed distance functions for the following shapes:</p>
+                <ul>
+                    <li>Sphere</li>
+                    <li>Box</li>
+                    <li>Cylinder</li>
+                    <li>Cone</li>
+                    <li>Line</li>
+                </ul>
+                <p>And you will have also implemented the following operations on SDFs:</p>
+                <ul>
+                    <li>Union</li>
+                    <li>Intersection</li>
+                    <li>Subtraction</li>
+                    <li>Rounding</li>
+                </ul>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="alert alert-danger" role="alert"><strong>Warning:</strong> Solutions (particularly for this
+                    task) exist online. The purpose of this task is for you to get practice formulating distance
+                    functions mathematically and translating that math into code on your own. You are welcome to read
+                    and watch videos to help you understand the <strong>principles</strong>, but you should write your
+                    code on your own and understand any code you submit. Be extra mindful about our honor principle and
+                    proper citation of sources in case you use outside resources to help you arrive at your answer.
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <div class="alert alert-info" role="alert"><strong>Note:</strong> you do not need to complete all of
+                    these primitives to get started on Task 2
+                    and beyond. So if you get stuck, you can move on and come back to fill in more primitives later.
+                </div>
+
+                <p>This task is in a lot of ways very similar to the code we ended up with at the end of the x-hours
+                    (and at the end of task 0.2), but allows for switching between different primitives and the
+                    visualization looks a bit fancier. We have provided you with the main function and shading logic
+                    already implemented for you. We have also provided you with an implementation for the signed
+                    distance function of a sphere in the <code>sdf.glsl</code> file.</p>
+                <p>Navigate to the <code>main_task1.glsl</code> file. If you have set up the basecode correctly, you
+                    should see
+                    something
+                    like Figure 6 when you open the static shader preview.</p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_0.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 6</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <p>You do not need to close the preview window. This shader allows you to view scenes which will
+                    visualize your implementations of the SDFs and SDF operations. For the majority of scenes, this
+                    shader simply visualizes the signed distance function on a plane along the z-axis and moves the
+                    plane back and forth along the axis from [-1,1]. To make the movements easier to understand, we have
+                    also coded a progress bar into the shader to visualize where the plane is within the range [-1,1].
+                </p>
+                <p>Blue represents positive values, white represents negative values, and red represents values very
+                    near 0. You can change the scene you are looking at by simply replacing the macro which the variable
+                    <code>sdf_func</code> is assigned to.
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <h3>Task 1.1: SDF for a Line</h3>
+                <p>Now navigate to the <code>sdf.glsl</code> file. This is where you will be implementing the SDF's. For
+                    this first subtask you will evaluate the signed distance to a line, which if you remember, you have
+                    already done in assignment 4! We give you the following function header for computing the signed
+                    distance function to a line:</p>
+
+                <pre><code class="language-glsl">float sdLine(in vec2 p, in vec2 a, in vec2 b)</code></pre>
+
+                <ul>
+                    <li><code>p</code> is the position you are evaluating the distance to</li>
+                    <li><code>a</code> and <code>b</code> are the end points of your line</li>
+                </ul>
+
+                <p>When deriving this signed distance function, or looking back to how you derived it in assignment 4,
+                    we recommend paying attention to what specific cases you had to check for. They might help you in
+                    deriving your next SDF.</p>
+                <p>Unlike the other objects you will be deriving SDFs for, this one is purely 2D, so we have changed the
+                    visualization function only for this subtask to rotate around the z-axis instead of move back and
+                    forth along
+                    it. To view your changes, open the main_task1 file and change the <code>sdf_func</code> macro on
+                    line 19 to
+                    <code>LINE</code>.
+                    If you
+                    have implemented this SDF correctly, you should get the result in Figure 7.
+                </p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_1.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 7</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 1.2: SDF for a Box</h3>
+                <p>We give you the following function header for computing the signed distance function to a box:</p>
+
+                <pre><code class="language-glsl">float sdBox(vec3 p, vec3 half_bounds)</code></pre>
+
+                <p>The signed distance function for a box assumes that it is axis-aligned and centered around the origin
+                    with
+                    the half-length, half-height, and half-width equal to the parameter <code>half_bounds</code>. So
+                    the
+                    dimensions of your box are simply two times the half-bounds of the box.</p>
+                <p>When determining how far a point <code>p</code> is from a box, you have to consider the minimum of a
+                    few cases.
+                    But before
+                    you attempt this in the 3D domain, we recommend you try to workout what the cases you should check
+                    for are
+                    for a box in the 2D domain. How are these cases similar to a line which you can think of as a 1D
+                    box? If you
+                    can figure out the pattern, then you will see that the SDF to a 3D box will follow suit, and with
+                    the
+                    assumption that the box is axis-aligned, this SDF ends up being fairly simple.</p>
+                <p>If you have implemented this SDF correctly, then you should get the result in Figure 8.</p>
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_2.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 8</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 1.3: SDF for a Cylinder</h3>
+                <p>We give you the following function header for computing the signed distance function to a cylinder:
+                </p>
+
+                <pre><code class="language-glsl">float sdCylinder(vec3 p, vec3 a, vec3 b, float r)</code></pre>
+
+                <p>Unlike the box, which was axis aligned, the SDF for a cylinder you will be implementing is for a
+                    cylinder along the axis between two points: <code>a</code> and <code>b</code> with a specified
+                    radius <code>r</code>.
+                </p>
+                <p>Before you attempt to tackle this SDF, we recommend attempting to derive an SDF for a cylinder that
+                    is aligned along a single axis. What are the cases that the shortest distance between an
+                    axis-aligned cylinder can take? It should be fairly similar to the axis-aligned box case, except
+                    with some different logic regarding the circular nature of the cylinder.</p>
+                <p>Now, is there a way you can generalize this for a cylinder around any arbitrary axis
+                    normalized(<code>b</code>-<code>a</code>) with endpoints <code>a</code> and
+                    <code>b</code>?
+                    Think about how you got the distance to an arbitrary line between two points <code>a</code> and
+                    <code>b.</code>
+                </p>
+                <p>We provide you with two separate scenes of differently oriented cylinders to test your
+                    implementation. If you have implemented this SDF correctly, then you should get the result in Figure
+                    9
+                    for the <code>CYLINDER</code> scene and the result in Figure 10 for <code>CYLINDER_TWO</code>.</p>
+                </p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_31.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 9</p>
+                    </div>
+                </div>
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_32.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 10</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 1.4: SDF for a Cone</h3>
+                <p>For the last SDF, you are going to implement a Cone with capped ends. We give you the following
+                    function header for computing the signed distance function to this shape:</p>
+
+                <pre><code class="language-glsl">float sdCone(vec3 p, vec3 a, vec3 b, float ra, float rb)</code></pre>
+
+                <p>The difference between this shape and that of a cylinder, is the radius at any point along the axis
+                    of the shape now becomes a function of where you are between its endpoints. We recommend starting
+                    from the axis-aligned Cylinder SDF you derived before deriving the more general one in task 1.3 and
+                    manipulating it to take into account how the radius changes between the two endpoints. If the radii
+                    are the same at both end points, the SDF should be equivalent to that of the cylinder, otherwise the
+                    radius between the endpoints will change linearly with how far you are from either endpoint. Now try
+                    to derive an SDF for any arbitrary axis normalized(<code>b</code>-<code>a</code>) with endpoints
+                    <code>a</code> and <code>b.</code>
+                </p>
+                <p>We provide you with two separate scenes of differently oriented cones to test your implementation. If
+                    you
+                    have implemented this SDF correctly, then you should get the result in Figure 11 for scene
+                    <code>CONE</code> and the result in Figure 12 for scene <code>CONE_TWO</code>.
+                </p>
+
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_41.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 11</p>
+                    </div>
+                </div>
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_42.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 12</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <h3>Task 1.5: Smooth Union of two SDFs</h3>
+                <p>While having the SDFs of a few simple primitives is a good exercise, creating complex shapes usually
+                    requires
+                    that you implement the ability to combine these simple primitives or manipulate them in a smooth
+                    way. For
+                    this sub-task, you will be implementing the Smooth Union operation on two SDFs using a quadratic
+                    interpolation method. We will not have you derive these specific equations directly. Instead, we are
+                    going
+                    to give you the equation for implementing smooth union, and then have you figure out how to perform
+                    smooth
+                    intersection and subtraction from this operation.</p>
+                <p>The union of two SDFs can be implemented simply as follows:</p>
+
+                <pre><code class="language-glsl">float opUnion(float d1, float d2) {return min(d1, d2);}</code></pre>
+
+                <p>To perform a smooth union, you basically want to take the minimum of your two signed distances and
+                    subtract a
+                    smoothing term from it. While there are many different smoothing terms which you can use, the
+                    formula for quadratic interpolation is: \(\mathrm{smin}(a,b,k) = \mathrm{min}(a,b) -
+                    \frac{h^2}{4k}\) where
+                    \(h = \mathrm{max}(k-\vert a-b \vert, 0)\).</p>
+                <p>Once you incorporate this into your shader correctly and set the scene to <code>SPHERE_UNION</code>,
+                    you should get something similar to Figure 13.</p>
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_5.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 13</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 1.6: Smooth Intersection of two SDFs</h3>
+                <p>While a smooth union will smooth out the transition between two SDFs, the smooth intersection
+                    function will
+                    return a smoothed-out version of the areas where your SDFs are both negative.</p>
+                <p>A non-smoothed intersection function works as a simple max of the two SDFs:</p>
+
+                <pre><code class="language-glsl">float opIntersection(float d1, float d2) {return max(d1, d2);}</code></pre>
+
+                <p>Now try to figure out how you can manipulate the smooth union function to transform it into a smooth
+                    intersection and implement the corresponding <code>opSmoothIntersection</code> function in your
+                    shader.</p>
+                <p>If you implement this subtask correctly, you should get something similar to Figure 14
+                    once you
+                    set the scene to <code>SPHERE_INTERSECTION</code>.</p>
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_6.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 14</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 1.7: Smooth Subtraction of two SDFs</h3>
+                <p>Sometimes you want to be able to sculpt an object out of simple primitives, and to do so you will
+                    typically
+                    use a lot of smooth subtractions where you return only the regions where your first signed distance
+                    function
+                    is negative.</p>
+                <p>A non-smoothed subtraction function works as follows:</p>
+
+                <pre><code class="language-glsl">float opSubtraction(float d1, float d2) {return max(-d1, d2);}</code></pre>
+
+                <p>Now try to figure out how you can manipulate the smooth union / smooth intersection functions to
+                    transform them into a smooth subtraction and implement the corresponding
+                    <code>opSmoothSubtraction</code> function in your shader.
+                </p>
+                <p>If you implement this subtask correctly, you should get something similar to Figure 15 when you set
+                    the scene to <code>SPHERE_DIFFERENCE</code>.</p>
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_7.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 15</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 1.8: Creating rounded primitives</h3>
+                <p>Sometimes it is useful to create rounded versions of your sharp primitives. If you look at a single
+                    frame of the <code>BOX</code> scene you should see something like Figure 16.</p>
+
+                <p>If you pay close attention to the isocontours, you may notice that the contours are actually rounded
+                    versions
+                    of your object. In fact, creating a rounded version of any object simply involves transitioning your
+                    SDF to
+                    another isocontour. This operation is not volume-preserving, and while there do
+                    exist
+                    methods to make this approximately volume-preserving, you just have to implement the transitioning
+                    between
+                    isocontours in the <code>opRound</code> function.</p>
+                <p>If you implement this correctly and change the scene to <code>ROUNDED_BOX</code>, you should get
+                    something similar
+                    to Figure 17.</p>
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="figures/isocontours.png"><img src="figures/isocontours.png" alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 16</p>
+                    </div>
+                </div>
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task1_8.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 17</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================================================================= -->
+
+        <h2>Task 2: Going 3D: Ray Generation (1 points)</h2>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <p>The scenes you have been creating so far are defined in 3D (you can evaluate the SDF at any point
+                    (x,y,z)),
+                    but we have only been drawing 2D slices through them (i.e. choosing a particular z coordinate and
+                    then
+                    varying x and y over the image plane). The next step is to visualize the signed distance field as
+                    seen from
+                    a camera. Head over to the file named <code>ray.glsl</code> for this task.</p>
+                <p>In this task, we will start by creating a "ray" for each pixel on the screen. Since a ray is defined
+                    by an
+                    origin and direction, it's useful to keep those together in a struct, for example:</p>
+
+                <pre><code class="language-glsl">//
+// Ray
+//
+struct ray
+{
+    vec3 origin;    // This is the origin of the ray
+    vec3 direction; // This is the direction the ray is pointing in
+};</code></pre>
+
+                <p>Creating a ray variable now is easy: While structs in GLSL cannot have explicitly defined
+                    constructors, they
+                    do have implicitly created ones. As long as you pass in your variables in the same order that your
+                    struct's
+                    variables are defined you should be good. For example:</p>
+
+                <pre><code class="language-glsl">ray r = ray(origin, direction);</code></pre>
+
+                <p>Next up, we need to think about how to calculate the origin and direction of a ray for each pixel.
+                </p>
+                <p>For debugging purposes, we have implemented two visualizations. The first one converts the ray
+                    direction for
+                    each pixel into a color and displays it. The second one draws a slice of the SDF as seen from the
+                    camera.</p>
+                <p>Additionally, there are four different camera views shown (top left, bottom left, top
+                    right,
+                    bottom right), to make sure you are properly handling different camera locations and
+                    orientations.</p>
+                <p>You
+                    can switch between the visualizations by setting the <code>visualize_func</code> variable at
+                    the top
+                    of the shader.</p>
+                <pre><code class="language-glsl">#define VISUALIZE_RAY_DIR 0
+#define VISUALIZE_SDF_SLICE 1
+
+int visualize_func = VISUALIZE_SDF_SLICE; // change this to change the view</code></pre>
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 2.1 Computing the camera "look at" coordinate frame</h3>
+                <p>As a first step, we have to define the coordinate frame of the camera based on the camera's position,
+                    the
+                    direction the camera is pointed in, and an up vector. If you need a refresher, check out chapter 4.3
+                    in
+                    "Fundamentals of Computer Graphics".</p>
+                <p>For this task, fill in the function <code>compute_camera_frame</code> in the
+                    <code>ray.glsl</code> file. The
+                    first
+                    three arguments are the input vectors discussed above respectively. The last three arguments are the
+                    variables you should store the computed u, v, and w vectors in.
+                </p>
+                <p>You will not see any change in the shader output after you have implemented this, but any errors
+                    should
+                    become very obvious when you are working on the next two tasks.</p>
+
+
+                <h3>Task 2.2 Orthographic projection</h3>
+                <p>The simplest possible way to construct rays is by "orthographic projection". Here all view rays are
+                    parallel
+                    to each other and the only thing that changes is the ray origin. Again, check out chapter 4.3 in
+                    "Fundamentals of Computer Graphics" for the math!</p>
+                <p>For this task, fill in the function <code>generate_ray_orthographic</code> in the
+                    <code>ray.glsl</code>
+                    file. You
+                    are given the uv position of the pixel on the image plane, the eye position, and the u, v, and w
+                    vectors you
+                    calculated in the previous step. Your task is to create and return a "ray" object with the member
+                    variables
+                    set up to create an orthographic projection onto the image plane.
+                </p>
+                <p>For <code>int visualize_func = VISUALIZE_RAY_DIR</code> (on line 7 of
+                    <code>main_task2.glsl</code>); you should get the image in Figure 18 (note that each quadrant is a
+                    solid color), and for <code>int visualize_func = VISUALIZE_SDF_SLICE;</code> the result in Figure
+                    19.
+                </p>
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="figures/task2_ortho.png"><img src="figures/task2_ortho.png" alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 18</p>
+                    </div>
+                </div>
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task2_22.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 19</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+
+                <h3>Task 2.3 Perspective perspective projection</h3>
+                <p>Finally, fill in the function <code>generate_ray_perspective</code> in the
+                    <code>ray.glsl</code> file. This
+                    will be
+                    conceptually very similar to the last task, but you will have to take into account the focal length
+                    as well
+                    (also called <strong>d</strong> in the book).<br />For
+                    <code>int visualize_func = VISUALIZE_RAY_DIR;</code> you should get Figure 20 (note the subtle
+                    gradients across each
+                    quadrant), and for <code>int visualize_func = VISUALIZE_SDF_SLICE;</code> the result in Figure 21.
+                </p>
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="figures/task2_persp.png"><img src="figures/task2_persp.png" alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 20</p>
+                    </div>
+                </div>
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task2_32.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 21</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+
+        <h2>Task 3: Ray Marching vs. Sphere Tracing (1 pts.)</h2>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <p>For task 3, you will be implementing two techniques to render signed distance fields and comparing
+                    the
+                    two.</p>
+                <p>The setup for this shader is slightly different than the last one. What the shader visualizes can be
+                    altered
+                    by changing the parameters to the render settings at the top of your shader. The render settings
+                    struct is
+                    defined in the <code>sdf.glsl</code> file as follows:</p>
+
+                <pre><code class="language-glsl">//
+// Render Settings
+//
+struct settings
+{
+    int sdf_func;      // Which primitive is being visualized (e.g. SPHERE, BOX, etc.)
+    int shade_mode;    // How the primiive is being visualized (GRID or COST)
+    int marching_type; // Should we use RAY_MARCHING or SPHERE_TRACING?
+    int task_world;    // Which task is being rendered (TASK3 or TASK4)?
+    float anim_speed;  // Specifies the animation speed
+};
+</code></pre>
+                <p>For your convenience, we have already implemented the main function and render functions for you in
+                    such a
+                    way
+                    that you can render the left and right halves of your shader using different techniques,
+                    visualization
+                    functions, or primitives. You can set the left and right settings independently by simply modifying
+                    the
+                    parameters to the implicit constructors for <code>left_settings</code> and
+                    <code>right_settings</code> on lines 22 and 23 of <code>main_task3.glsl</code>.
+                </p>
+                <p>For task 3, we have already implemented two shading functions for you to use to visualize your
+                    results. <code>GRID</code>
+                    renders the intersection of your scene and a 3-dimensional grid, while <code>COST</code> visualizes
+                    the cost of
+                    your
+                    rendering techniques by setting the final color to:</p>
+
+                <pre><code class="language-glsl">vec3(float(iters) / float(cost_norm));</code></pre>
+
+                <p>where <code>iters</code> is the number of iterations your rendering technique takes, and
+                    <code>cost_norm</code> is a normalization factor that is used so that your cost can fit between
+                    0
+                    and 1. For the reference cost comparisons that we will make later on, we will always tell you what
+                    normalization factor we use, but feel free to change it to gain an understanding of the performance
+                    of your
+                    techniques.
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <h3>Task 3.1 Ray Marching</h3>
+                <p>You are given the following function header for <code>ray_march</code> in <code>sdf.glsl</code>:</p>
+
+                <pre><code class="language-glsl">// TASK 3.1
+bool ray_march(ray r,
+               float step_size,
+               int max_iter,
+               settings setts,
+               out vec3 hit_loc,
+               out int iters)</code></pre>
+
+                <p>Your ray marching function will take in a <code>ray</code>,
+                    <code>step_size</code>, a maximum number
+                    of
+                    <code>steps</code>, the render <code>settings</code>, and
+                    will return whether or not there was a collision with the scene. If a collision occurs, then the
+                    function
+                    will
+                    set the hit location reference, which is passed into the function, and will return the number of
+                    steps/iterations taken to reach that point. If a collision never occurs, you should set the
+                    iteration count
+                    to the maximum iterations.
+                </p>
+
+                <p>When you have successfully implemented raymarching, you should get a result like in Figure 22 when
+                    the
+                    <code>sdf_func</code> is set to <code>SPHERE</code> and <code>shade_mode</code> is set to
+                    <code>GRID</code> for
+                    both left and
+                    right render settings.
+                </p>
+
+                <p>When the <code>cost_norm</code> is set to 1500, you should get the result in Figure 23 when you set
+                    the <code>shade_mode</code> to
+                    <code>COST</code>
+                    for both
+                    left and right render settings.
+                </p>
+
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task3_1_grid.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 22</p>
+                    </div>
+                </div>
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task3_1_cost.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 23</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 3.2 Sphere Tracing</h3>
+                <p>For this simple setup of just a single primitive and a plane, 1500 steps seems awfully large, and
+                    having to
+                    specify a step size, trading performance for accuracy, is slightly tedious. So now you are going to
+                    implement a technique that is more efficient for the scenes you will encounter in this assignment,
+                    and also
+                    allows you to not have to specify any step size.
+
+                <p>Implement the function <code>sphere_tracing</code> in <code>sdf.glsl</code>. The overall process is
+                    nearly identical to raymarching, except that you make the
+                    assumption
+                    that your <code>world_sdf</code> evaluation is exact, allowing you to set your step size to the
+                    result of the SDF
+                    evaluation.</p>
+                <p>When you have successfully implemented sphere tracing, you should get a result like Figure 24
+                    when:</p>
+                <ul>
+                    <li>The <code>sdf_func</code> is set to <code>SPHERE</code>, and the shade_mode is set to
+                        <code>GRID</code>, for both left and right render settings;
+                    </li>
+                    <li>You set the right render settings to render using <code>SPHERE_TRACING</code>, and the left
+                        render settings, to render using <code>RAY_MARCHING</code>:</li>
+                </ul>
+                <p>Now change the <code>cost_norm</code> to 100, and the <code>shade_mode</code> to <code>COST</code>.
+                    Compare
+                    the two rendering methods.</p>
+                <p>You should get something similar to Figure 25.</p>
+                <p>As you can see, sphere tracing is significantly faster than ray marching! While there are more
+                    spatial
+                    culling strategies you can employ to improve this further, or even make the two methods more similar
+                    in
+                    performance, you do not have to do so. From now on, future tasks will only ask you to use your
+                    sphere
+                    tracing implementation.</p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task3_2_grid.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 24</p>
+                    </div>
+                </div>
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task3_2_cost.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 25</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+
+        <h2>Task 4: Shading (1.5 pts.)</h2>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <p>For this last task, you will be implementing more interesting shading techniques for your sphere
+                    tracer.</p>
+
+                <h3>Task 4.1 Visualizing Normals</h3>
+                <p>When dealing with SDFs, you are likely to not have analytical normals, so you have to approximate
+                    them using
+                    finite-difference. Implement computeNormal to return the normal at a position p, using the
+                    differences
+                    between the SDFs around that position.</p>
+                <p>After you implement the <code>computeNormal</code> function, fill in the case statement in the shade
+                    function
+                    on line 47 of
+                    the <code>main_task4.glsl</code> file for the <code>NORMAL</code> scene to visualize the average
+                    between
+                    your normal and color white
+                    similar to what you did in the previous assignment. Change the shade mode by changing the settings'
+                    implicit
+                    constructor on line 16 of the <code>main_task4.glsl</code> file.</p>
+                <p>If you implemented this task correctly, you should see something like Figure 24 for the
+                    <code>NORMAL</code> scene.
+                </p>
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task4_1.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 24</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 4.2 Diffuse point light source</h3>
+                <p>For this subtask, you are going to implement lighting from a diffuse point light source. We provide
+                    the light
+                    position, the light intensity, and the surface color for you in the <code>DIFFUSE_POINT</code> case
+                    of the
+                    shade function.
+                    Similar to how you implemented diffuse lighting in the first assignment, you will end up calculating
+                    the
+                    product between the surface color, light intensity, inverse squared distance to the light source,
+                    and the
+                    cosine between your surface normal and the direction to the light source.</p>
+                <p>If you have implemented this correctly, you should get the result in Figure 25 for the
+                    <code>DIFFUSE_POINT</code>
+                    scene.
+                </p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task4_2.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 25</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+
+                <h3>Task 4.3 Environment mapping</h3>
+                <p>Finally, we'd like you to implement environment mapping. You will already have an environment map
+                    texture
+                    selected in <code>iChannel0</code>. It is included at the top of the <code>main_task4.glsl</code>
+                    file like this:</p>
+                <pre><code class="language-glsl">#iChannel0 "file://environment_maps/Uffizi_{}.jpg"
+#iChannele::Type "CubeMap"
+</code></pre>
+
+                <p>You can read from an environment map by using the <code>texture</code> function (e.g.
+                    <code>texture(iChannel0, lookupDirection)</code>). For this task, you have to compute the
+                    direction that
+                    the view ray reflects into when hitting the surface at the hit point.
+                </p>
+
+                <div class="alert alert-success" role="alert"><strong>Tip:</strong> GLSL has a built-in
+                    <code>reflect</code> function.
+                </div>
+                <p>The final result should look something like Figure 26.</p>
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <video controls loop width="820" class="embed-responsive-item center-block" style="max-width:100%">
+                        <source src="figures/task4_3.mp4" type="video/mp4">
+                    </video>
+                    <div class="caption text-center">
+                        <p class="small">Figure 26</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================================================================= -->
+
+        <h2>Task 5: Interesting Scene (0.5 pts.)</h2>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <p>Implement your own interesting shader/scene. Try to wow us with your creativity! You have to create a
+                    new
+                    shader for this, but you are allowed to use any code that you have written or that we have provided
+                    for this
+                    assignment so far.</p>
+                <p>At a minimum, the scene:</p>
+                <ul class="p-rich_text_list p-rich_text_list__bullet" data-stringify-type="unordered-list"
+                    data-indent="0" data-border="0">
+                    <li data-stringify-indent="0" data-stringify-border="0">should use at least 5 primitives</li>
+                    <li data-stringify-indent="0" data-stringify-border="0">should be animated (either camera,
+                        primitives, or
+                        both)</li>
+                </ul>
+                <p><strong>For grad students:</strong></p>
+                <ul>
+                    <li>The scene should contain at least one recognizable object (that is, not just "abstract" shapes
+                        such as
+                        in Task 4). You can take inspiration from <a class="inline_disabled"
+                            href="https://iquilezles.org/articles/raymarchingdf/" target="_blank" rel="noopener">Inigo
+                            Quilez</a> and how to model real-world objects with relatively few operations.</li>
+                </ul>
+
+            </div>
+        </div>
+
+
+        <!-- ================================================================= -->
+
+        <h2>What to submit</h2>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <p>We need to see your final output in order to grade. If you had any unresolved problems with any task,
+                    we also
+                    need to have access to your original code to help debug and assign partial credit. Therefore, please
+                    submit:</p>
+                <ul>
+                    <li>5 <code>main_taskX.html</code> files, one for each task (besides task 0).</li>
+                    <li>a zip folder containing ALL of glsl code, including the environment folder and
+                        <code>common.glsl</code>
+                    </li>
+                    <li>a <code>README.md</code> describing if you have any unresolved problems, and where (which task,
+                        why, what you
+                        tried)
+                    </li>
+                </ul>
+                <p>Notably, do not include the <code>figures</code> folder with all the images and videos from this
+                    assignment description.</p>
+                <p>For example your uploads will look something like Figure 27 (you could alternatively encase all of
+                    this
+                    into a zip
+                    folder instead of zipping only the glsl code, the important part is we get both the html and the
+                    glsl).</p>
+
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="figures/submit.png"><img src="figures/submit.png" alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 27</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

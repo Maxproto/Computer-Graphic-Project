@@ -1,0 +1,382 @@
+<!DOCTYPE html
+    PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Computer Graphics - Assignment 4</title>
+
+    <link href="resources/bootstrap.min.css" rel="stylesheet">
+    <link href="resources/custom2016.css" rel="stylesheet">
+
+    <script src="common.js"></script>
+    <script src="glUtil.js"></script>
+    <script src="uiUtil.js"></script>
+    <script src="vector.js"></script>
+    <script src="matrix.js"></script>
+    <script src="arm.js"></script>
+    <script src="skeleton.js"></script>
+    <script src="joint.js"></script>
+    <script src="skin.js"></script>
+
+    <!-- Add all tasks -->
+    <script src="task3.js"></script>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body onload="setupAssignment();">
+    <div class="container headerBar">
+        <h1>Programming Assignment 4 - Max Lan</h1>
+    </div>
+    <div class="container contentWrapper">
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <h2>Overview</h2>
+                <p>In this assignment, you will learn how to implement linear blend skinning for meshes. You will be
+                    using
+                    Javascript and WebGL to render the results interactively in your browser.</p>
+                <h3>Framework</h3>
+                <p>Before starting with the assignment, we strongly encourage you to look through the provided
+                    framework. The
+                    webgl and utility framework is similar to the previous assignments; however, there are some files
+                    containing
+                    additional classes to which you'll have to add code to complete the assignment. All the locations
+                    where you
+                    are required to add code have been marked with <strong><code>TODO</code></strong> comments, and have
+                    additional
+                    info in comments marked with <strong><code>NOTE</code></strong>.</p>
+                <p>The <code>joint.js</code> file contains the <code>Joint</code> class that represents a joint and its
+                    attached
+                    bone. The <code>skeleton.js</code> file contains the <code>Skeleton</code> class that stores all of
+                    the
+                    joints in an array. The skeleton is organized in a hierarchy where every joint contains a reference
+                    to its
+                    parent and the root of the hierarchy has its parent set to <code>null</code>. Each joint in the
+                    hierarchy
+                    can be represented by a local transform with respect to its parent. The <code>mPosition</code> field
+                    in the
+                    <code>Joint</code> class stores the position of the joint with respect to its parent. The
+                    <code>mForward</code> is a unit vector indicating the direction of the local +X axis of the joint,
+                    also with
+                    respect to its parent. The <code>mUp</code> means the local +Y axis, and <code>mJointAxis</code> 
+                    is the local +Z axis, around which the joint can rotate. A real number <code>mJointAngle</code> stores 
+                    the current
+                    rotation angle of the joint, which should be 0 when it was first initialized. In addition to these
+                    fields,
+                    the joint also contains a <code>mLength</code> field that stores the length of the corresponding
+                    bone in the
+                    skeleton hierarchy. Each joint is rendered as a wireframe cube with its corresponding length and
+                    orientation.
+                </p>
+            </div>
+
+            <div class="col-sm-5 col-md-5">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <p>The local transform of a <code>Joint</code> class is initialized by three vectors passed into its
+                    constructor
+                    function: <code>head</code>, <code>tip</code> and <code>up</code>. The first two vectors are the
+                    coordinates
+                    of the two ends of the joint in its parent's coordinate system. And the <code>up</code> vector is
+                    perpendicular to the rotation axis, pointing toward the half-plane indicating the rotation
+                    direction.<strong></strong></p>
+                <p>The <code>skin.js</code> file contains the <code>SkinMesh</code> class that represents the "skin",
+                    i.e. the
+                    mesh to which the skeleton is bound. The original untransformed vertices for the mesh are stored in
+                    the
+                    <code>mOriginalPositions</code>, and the transformed ("skinned") vertices are stored
+                    in <code>mTransformedPositions</code>. You can use the <code>getVertex()</code> and
+                    <code>setTransformedVertex()</code> functions to access the original vertex locations and update the
+                    transformed vertex locations, respectively. For smooth skinning, the <code>mWeights</code> array is
+                    used to
+                    store the weights for each vertex with respect to all the joints in a bound skeleton. You can set
+                    and
+                    retrieve these weights using the <code>setVertexWeight()/getVertexWeight()</code> functions.
+                </p>
+                <p>The basecode also has functionality to help you visualize weights for each vertex with respect to
+                    each
+                    joint. This functionality enables you to understand and debug your weighting code correctly.</p>
+                <!-- <p><img src="reference_images/weightvisualizer.png" class="img-responsive center-block" width="820" /></p> -->
+                <!-- <p style="text-align: center;">Figure1: Weight visualizer</p> -->
+
+            </div>
+
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="reference_images/weightvisualizer.png"><img src="reference_images/weightvisualizer.png"
+                            alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 1: Weight visualizer</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+
+        <h2>Task 1: Rigid Skinning (Undergrads: 2 pts Grads: 1.5pts)</h2>
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <p>In this task, you will implement rigid skinning in the files <code>joint.js</code> and
+                    <code>skin.js</code>.
+                    The subtasks should be solved in sequential order.
+                </p>
+
+                <h3>Subtask 1: Computing Transforms (UG: 1pt G: 0.75pt)</h3>
+                <p>For the first subtask, you will have to compute the local, world and binding transforms of each
+                    joint.
+                    Remember that each joint is specified with a joint location with respect to its parent position and
+                    has an
+                    axis about which it can rotate.</p>
+                <p>A joint's local matrix (which you should compute in <code>getLocalMatrix()</code>) should be the
+                    product of a
+                    rotation matrix and a local coordinate frame matrix (see <code>Matrix.frame</code> function). </p>
+                <p>Once you are confident that your local transformation is correct, you should implement the
+                    computation of the
+                    world transform matrix for a joint within <code>getWorldMatrix()</code>. This is simply the
+                    transform of the
+                    parent joint (if any) multiplied by this joint's local transform. You've already implemented
+                    something
+                    similar in a previous assignment.</p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <p>Once you have computed the world transform of the joints correctly, you can go ahead with computing
+                    the
+                    binding matrix of each joint in the <code>computeBindingMatrix()</code> function. The binding matrix
+                    is
+                    computed when the joint is aligned with the associated mesh in the "binding pose". The binding
+                    matrix is
+                    used to transform a point in world-space to a point in the local space of a bone; it is simply the
+                    inverse
+                    of the joint's world matrix at the time of binding.</p>
+
+                <h3>Subtask 2: Computing Rigid Skinning (Undergrads: 1pt Grads: 0.75pt)</h3>
+                <p>Once you've successfully computed the previous task, you can go ahead and implement the rigid
+                    skinning within
+                    the <code>rigidSkinning()</code> function in the <code>skin.js</code> file. For now, each vertex in
+                    the mesh
+                    is only attached to one bone. You can figure out which bone a vertex is attached to using the
+                    <code>getRigidlyAttachedJoint()</code>function. You should then transform the vertex using the bone
+                    transform; see the pseudo code in the JS file for more information.
+                </p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="reference_images/rigidskinning.png"><img src="reference_images/rigidskinning.png"
+                            alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 2: Rigid skinning</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-11 col-md-10 col-lg-9">
+                <h3>Your result:</h3>
+                <div class="canvas-container">
+                    <input type="checkbox" checked="true" onchange="task1.setShowJoints(this.checked);"
+                        id="task1CboxJoints" />
+                    Show joints
+                    <canvas id="task-1" width="820" height="461"></canvas>
+                </div>
+            </div>
+            <div class="col-sm-1 col-md-2 col-lg-3">
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <h2>Task 2: Linear Blend Skinning (Undergrads: 3pts Grads: 2.5pts)</h2>
+                <p>In this task, you will perform linear blend skinning, which helps you create smoother meshes under
+                    animation.
+                </p>
+                <h3>Subtask 1: Point-Line Nearest Distance Computation (1 pt)</h3>
+                <p>In this first subtask, you will have to compute the nearest distance from a point to a line segment.
+                    You will
+                    have to add your code to the <code>computeDistanceToLine()</code> within the <code>skin.js</code>
+                    file. This
+                    function takes in a point and the two vertices that make up the line. Note that it's not as easy as
+                    computing the distance to a line, because we are considering a line <strong>segment</strong>, there
+                    are a
+                    few more cases you'll need to consider. Check the comments in the code for some hints.</p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <h3>Subtask 2: Computing Vertex Weights (Undergrads: 1pts Grads: 0.75pts)</h3>
+                <p>Once you've implemented the nearest distance between a point and a line segment, you can use this to
+                    compute
+                    the vertex weights. The vertex weight for a particular bone tell you how much that bone "influences"
+                    the
+                    vertex, and we will compute the weights as a function of distance from the vertex to the bone. You
+                    will have
+                    to implement a weighting strategy within the <code>computeLinearBlendedWeights()</code> function
+                    that
+                    considers the inverse of the distance raised to the fourth power (1/distance<sup>4</sup>) of each
+                    vertex to
+                    the bone. You can use the previously discussed weight display code to help you debug problems
+                    associated
+                    with this task.</p>
+                <div class="alert alert-info" role="alert"><strong>Note:</strong> Using this weighting strategy directly
+                    leads
+                    to weights that don't sum up to 1 - for each vertex, you will have to normalize its weights over all
+                    bones.
+                </div>
+                <p>If you've implemented everything correctly, your weights will look like those in Figure 3.</p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="reference_images/arm-weights.jpg"><img src="reference_images/arm-weights.jpg"
+                            alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 3: Correct weights</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <h3>Subtask 2: Linear Blend Skinning (Undergrads: 1pts Grads: 0.75pts)</h3>
+                <p>Now that you have weights for each bone-vertex combination, you should implement the actual linear
+                    blend
+                    skinning code. Look at the <code>skin.js</code> file and implement the
+                    <code>linearBlendSkinning </code>function. With rigid skinning, you only transformed the vertex
+                    position using one joint; now, you transform it with every joint in the skeleton, and do a weighted
+                    average
+                    of all transformed positions using the vertex weights. See the pseudo code in the JS file for more
+                    info. If
+                    you've implemented this task correctly, your mesh will look similar to Figure 4.
+                </p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="reference_images/linearskinning.png"><img src="reference_images/linearskinning.png"
+                            alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 4: Linear blend skinning</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-sm-11 col-md-10 col-lg-9">
+                <h3>Your result:</h3>
+                <div class="canvas-container">
+                    <input type="checkbox" checked="true" onchange="task2.setShowJoints(this.checked);"
+                        id="task2CboxJoints" />
+                    Show joints
+                    <canvas id="task-2" width="820" height="461"></canvas>
+                </div>
+            </div>
+            <div class="col-sm-1 col-md-2 col-lg-3">
+            </div>
+        </div>
+        <!-- ================================================================= -->
+
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <h2>Task 3: Skinning A Custom Mesh (1pt)</h2>
+                <p>In this task, you will combine everything you've implemented in previous tasks to rig a provided arm
+                    mesh.
+                    You need to create new joints and manually place them on locations along the arm. At a minimum,
+                    there should
+                    at least be 3 bones (the upper arm, middle arm and wrist). We have already provided the locations of
+                    the
+                    first two bones for your convenience. You can use these positions to get an idea of how to place the
+                    additional joints. To get full points for this task you should use additional joints within the
+                    fingers to
+                    increase the realism of the skinning. Slider elements in the UI are automatically added as you bind
+                    a
+                    skeleton containing bones to the meshes.</p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+                <div class="thumbnail">
+                    <a href="reference_images/customskinning.png"><img src="reference_images/customskinning.png"
+                            alt="..."></a>
+                    <div class="caption text-center">
+                        <p class="small">Figure 5: Skinning a custom mesh</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-11 col-md-10 col-lg-9">
+                <h3>Your result:
+                     Please click on the 'animation' checkbox to see the Procedural Animation result.
+                </h3>
+                <div class="canvas-container">
+                    <input type="checkbox" checked="true" onchange="task3.setShowJoints(this.checked);"
+                        id="task3CboxJoints" />
+                    Show joints
+                    <input type="checkbox" onchange="toggleAnimation(this.checked);" id="task3CboxAnimation" />
+                    Animation
+                    <canvas id="task-3" width="820" height="461"></canvas>
+                </div>
+            </div>
+            <div class="col-sm-1 col-md-2 col-lg-3">
+            </div>
+        </div>
+        <!-- ================================================================= -->
+
+        <div class="row">
+            <div class="col-sm-7 col-md-7">
+                <h2>Procedural Animation of a Custom Mesh: (<span style="color: #ff0000;">Grad students only</span>:
+                    1pt)</h2>
+                <p>Graduate students must perform a procedural animation of the arm and undergraduates may do so for
+                    extra credit. At each time interval you should update the rotation angle of the individual joints to
+                    create
+                    a realistic motion. Get creative!</p>
+
+                <!-- ================================================================= -->
+
+                <h2>What to submit:</h2>
+                <p>You should submit a zip file containing the entire folder for this assignment (including all js
+                    files, html
+                    files and the <code>resources</code> folder). Rename <code>firstname-lastname-report.html</code> to
+                    contain
+                    your name. Fill in the report
+                    with any problems encountered and comments about the assignment.</p>
+            </div>
+            <div class="col-sm-5 col-md-5">
+            </div>
+        </div>
+    </div>
+    <script>
+        var task1 = null;
+        var task2 = null;
+        var task3 = null;
+        function setupAssignment() {
+            task1 = setupTask("task-1", Task1);
+            task2 = setupTask("task-2", Task2);
+            task3 = setupTask("task-3", Task3);
+        }
+    </script>
+</body>
+
+</html>
